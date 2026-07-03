@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Announcement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="info-card">
+                <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
+
+                <!-- Search -->
+                <div class="search-bar" style="margin-bottom:1.5rem;display:flex;gap:1rem;">
+                    <input type="text" id="searchInput" placeholder="Search announcements..."
+                           style="flex:1;padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;"
+                           oninput="filterAnnouncements()">
+                    <select id="filterPriority" onchange="filterAnnouncements()"
+                            style="padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;">
+                        <option value="">All Priorities</option>
+                        <option>Emergency</option>
+                        <option>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
+                    </select>
+                </div>
+
+                <!-- Create Form (admin only) -->
+                <div id="adminCreateSection" style="display:none;">
+                    <button class="action-btn" style="background:#be185d;margin-bottom:1.5rem;"
+                            onclick="toggleForm()">
+                        <i class="fas fa-plus"></i> Create New Announcement
+                    </button>
+                    <div id="createForm" style="display:none;background:#fff5f7;padding:1.5rem;border-radius:12px;margin-bottom:1.5rem;">
+                        <h4 style="color:#333;margin-bottom:1rem;"><i class="fas fa-plus-circle"></i> New Announcement</h4>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div>
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Priority Level</label>
+                                <select id="annPriority" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    <option>Low</option><option>Medium</option><option>High</option><option>Emergency</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Category</label>
+                                <select id="annCategory" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    <option>Barangay Event</option><option>Advisory</option><option>Emergency</option><option>Meeting</option><option>Others</option>
+                                </select>
+                            </div>
+                            <div style="grid-column:span 2;">
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Title *</label>
+                                <input type="text" id="annTitle" placeholder="Announcement title"
+                                       style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                            </div>
+                            <div style="grid-column:span 2;">
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Expiry Date (optional)</label>
+                                <input type="date" id="annExpiry" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                            </div>
+                            <div style="grid-column:span 2;">
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Message *</label>
+                                <textarea id="annMessage" rows="4" placeholder="Announcement message..."
+                                          style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;"></textarea>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:1rem;">
+                            <button class="submit-clearance-btn" style="background:#be185d;width:auto;padding:0.7rem 1.5rem;"
+                                    onclick="publishAnnouncement()">
+                                <i class="fas fa-paper-plane"></i> Publish
+                            </button>
+                            <button onclick="toggleForm()" style="background:transparent;border:1px solid #fce7f3;padding:0.7rem 1.5rem;border-radius:20px;cursor:pointer;color:#555;">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- List -->
+                <h4 style="color:#333;margin-bottom:1rem;"><i class="fas fa-list"></i> All Announcements</h4>
+                <div id="announcementsList">
+                    <p style="color:#999;padding:2rem;text-align:center;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+let allAnnouncements = [];
+let currentUserRole  = 'resident';
+
+requireAuth(async user => {
+    loadSidebar('announcement');
+    loadTopbar();
+
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists && snap.data().role === 'admin') {
+        currentUserRole = 'admin';
+        document.getElementById('adminCreateSection').style.display = 'block';
+    }
+
+    loadAnnouncements();
+});
+
+function toggleForm() {
+    const f = document.getElementById('createForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function publishAnnouncement() {
+    const title    = document.getElementById('annTitle').value.trim();
+    const message  = document.getElementById('annMessage').value.trim();
+    const priority = document.getElementById('annPriority').value;
+    const category = document.getElementById('annCategory').value;
+    const expiry   = document.getElementById('annExpiry').value;
+
+    if (!title || !message) { showToast('Title and message are required.', '#dc2626'); return; }
+
+    try {
+        await db.collection('announcements').add({
+            title, message, priority, category,
+            expiryDate: expiry || null,
+            status:     'active',
+            createdBy:  auth.currentUser.uid,
+            createdAt:  firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        showToast('Announcement published!', '#333');
+        document.getElementById('annTitle').value   = '';
+        document.getElementById('annMessage').value = '';
+        document.getElementById('annExpiry').value  = '';
+        toggleForm();
+        loadAnnouncements();
+    } catch (e) {
+        showToast('Failed to publish: ' + e.message, '#dc2626');
+    }
+}
+
+async function deleteAnnouncement(id) {
+    if (!confirm('Delete this announcement?')) return;
+    await db.collection('announcements').doc(id).delete();
+    showToast('Deleted.', '#333');
+    loadAnnouncements();
+}
+
+function loadAnnouncements() {
+    db.collection('announcements')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snap => {
+          allAnnouncements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderAnnouncements(allAnnouncements);
+      });
+}
+
+function filterAnnouncements() {
+    const search   = document.getElementById('searchInput').value.toLowerCase();
+    const priority = document.getElementById('filterPriority').value;
+    const filtered = allAnnouncements.filter(a =>
+        (!search   || a.title?.toLowerCase().includes(search) || a.message?.toLowerCase().includes(search)) &&
+        (!priority || a.priority === priority)
+    );
+    renderAnnouncements(filtered);
+}
+
+function renderAnnouncements(list) {
+    const el = document.getElementById('announcementsList');
+    if (!list.length) {
+        el.innerHTML = `<p style="color:#999;padding:2rem;text-align:center;">No announcements found.</p>`;
+        return;
+    }
+    const colors = { Emergency:'#fee2e2', High:'#ffedd5', Medium:'#fef9c3', Low:'#f0f0f0' };
+    const textColors = { Emergency:'#dc2626', High:'#f97316', Medium:'#ca8a04', Low:'#555' };
+
+    el.innerHTML = `<div class="announce-list">` +
+        list.map(a => `
+        <div class="announce-item" style="border-left:4px solid #be185d;background:${colors[a.priority]||'#fff5f7'};">
+            <div class="announce-icon">
+                <i class="fas ${a.priority==='Emergency'?'fa-exclamation-triangle':'fa-bullhorn'}"
+                   style="color:${textColors[a.priority]||'#be185d'};font-size:1.2rem;"></i>
+            </div>
+            <div class="announce-content" style="flex:1;">
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem;">
+                    <h4 style="margin:0;">${a.title || 'Untitled'}</h4>
+                    <span class="status-badge" style="background:${colors[a.priority]||'#fff5f7'};color:${textColors[a.priority]||'#be185d'};font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:20px;font-weight:600;">
+                        ${a.priority || 'Low'}
+                    </span>
+                    <span style="font-size:0.65rem;color:#999;background:#f0f0f0;padding:0.15rem 0.5rem;border-radius:20px;">
+                        ${a.category || ''}
+                    </span>
+                </div>
+                <p style="font-size:0.8rem;color:#555;margin:0.2rem 0;">${a.message || ''}</p>
+                <div style="display:flex;gap:1rem;align-items:center;margin-top:0.3rem;">
+                    <span class="announce-date"><i class="fas fa-clock"></i> ${formatDate(a.createdAt)}</span>
+                    ${a.expiryDate ? `<span class="announce-date"><i class="fas fa-calendar-times"></i> Expires: ${a.expiryDate}</span>` : ''}
+                </div>
+            </div>
+            ${currentUserRole === 'admin' ? `
+            <button onclick="deleteAnnouncement('${a.id}')"
+                    style="background:#ef4444;border:none;padding:0.3rem 0.8rem;border-radius:20px;color:white;cursor:pointer;font-size:0.75rem;align-self:flex-start;">
+                <i class="fas fa-trash"></i>
+            </button>` : ''}
+        </div>`).join('') + `</div>`;
+}
+</script>
+</body>
+</html>

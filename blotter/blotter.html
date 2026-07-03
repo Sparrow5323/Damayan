@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Blotter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="info-card">
+                <h3><i class="fas fa-gavel"></i> Blotter Reports</h3>
+
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+                    <button class="back-home" style="background:#6b7280;border:none;padding:0.4rem 1.2rem;border-radius:20px;color:white;cursor:pointer;"
+                            onclick="redirectToRoot('services/services.html')">
+                        <i class="fas fa-arrow-left"></i> Back to Services
+                    </button>
+                    <button class="action-btn" style="background:#be185d;" onclick="toggleBlotterForm()">
+                        <i class="fas fa-plus"></i> File New Report
+                    </button>
+                </div>
+
+                <!-- New Blotter Form -->
+                <div id="blotterForm" style="display:none;background:#fff5f7;padding:1.5rem;border-radius:12px;margin-bottom:1.5rem;border:1px solid #fce7f3;">
+                    <h4 style="color:#333;margin-bottom:1rem;"><i class="fas fa-edit"></i> New Blotter Report</h4>
+                    <div class="blotter-form-grid">
+                        <div class="blotter-field">
+                            <label>Complainant Name *</label>
+                            <input type="text" id="bltComplainant" placeholder="Your full name">
+                        </div>
+                        <div class="blotter-field">
+                            <label>Contact Number *</label>
+                            <input type="tel" id="bltContact" placeholder="09XXXXXXXXX">
+                        </div>
+                        <div class="blotter-field">
+                            <label>Respondent Name *</label>
+                            <input type="text" id="bltRespondent" placeholder="Person being reported">
+                        </div>
+                        <div class="blotter-field">
+                            <label>Incident Date *</label>
+                            <input type="date" id="bltDate">
+                        </div>
+                        <div class="blotter-field">
+                            <label>Incident Location</label>
+                            <input type="text" id="bltLocation" placeholder="Where did it happen?">
+                        </div>
+                        <div class="blotter-field">
+                            <label>Type of Incident</label>
+                            <select id="bltType" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                <option value="">Select type</option>
+                                <option>Physical Altercation</option>
+                                <option>Verbal Abuse</option>
+                                <option>Property Damage</option>
+                                <option>Theft</option>
+                                <option>Noise Complaint</option>
+                                <option>Domestic Dispute</option>
+                                <option>Others</option>
+                            </select>
+                        </div>
+                        <div class="blotter-field" style="grid-column:span 2;">
+                            <label>Incident Details *</label>
+                            <textarea id="bltDetails" rows="4" placeholder="Describe the incident in detail..."></textarea>
+                        </div>
+                    </div>
+                    <div style="margin-top:1rem;display:flex;gap:1rem;">
+                        <button class="submit-clearance-btn" style="width:auto;padding:0.7rem 1.5rem;" id="bltSubmitBtn" onclick="submitBlotter()">
+                            <i class="fas fa-paper-plane"></i> Submit Report
+                        </button>
+                        <button onclick="toggleBlotterForm()" style="background:transparent;border:1px solid #fce7f3;padding:0.7rem 1.5rem;border-radius:20px;cursor:pointer;color:#555;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search & Filter -->
+                <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                    <input type="text" id="bltSearch" placeholder="Search blotter records..."
+                           style="flex:1;padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;min-width:200px;"
+                           oninput="filterBlotter()">
+                    <select id="bltStatusFilter" onchange="filterBlotter()"
+                            style="padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;">
+                        <option value="">All Status</option>
+                        <option>open</option>
+                        <option>under investigation</option>
+                        <option>resolved</option>
+                        <option>closed</option>
+                    </select>
+                </div>
+
+                <!-- Table -->
+                <div style="overflow-x:auto;">
+                    <table class="request-table" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Case No.</th>
+                                <th>Date Filed</th>
+                                <th>Complainant</th>
+                                <th>Respondent</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th id="adminActionsHeader" style="display:none;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blotterTableBody">
+                            <tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading...
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+let allBlotters = [];
+let isAdmin     = false;
+
+requireAuth(async user => {
+    loadSidebar('services');
+    loadTopbar();
+
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists && snap.data().role === 'admin') {
+        isAdmin = true;
+        document.getElementById('adminActionsHeader').style.display = '';
+    }
+
+    // Pre-fill complainant name
+    if (snap.exists) {
+        const p = snap.data();
+        document.getElementById('bltComplainant').value = p.fullName || '';
+        document.getElementById('bltContact').value     = p.contactNumber || '';
+    }
+
+    loadBlotter(user.uid);
+});
+
+function toggleBlotterForm() {
+    const f = document.getElementById('blotterForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitBlotter() {
+    const complainant = document.getElementById('bltComplainant').value.trim();
+    const contact     = document.getElementById('bltContact').value.trim();
+    const respondent  = document.getElementById('bltRespondent').value.trim();
+    const date        = document.getElementById('bltDate').value;
+    const location    = document.getElementById('bltLocation').value.trim();
+    const type        = document.getElementById('bltType').value;
+    const details     = document.getElementById('bltDetails').value.trim();
+
+    if (!complainant || !contact || !respondent || !date || !details) {
+        showToast('Please fill in all required fields.', '#dc2626'); return;
+    }
+
+    const btn = document.getElementById('bltSubmitBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const caseNo = genRefNo('BLT');
+        await db.collection('blotter').add({
+            uid: auth.currentUser.uid,
+            email: auth.currentUser.email,
+            complainant, contactNumber: contact,
+            respondent, incidentDate: date,
+            incidentLocation: location,
+            incidentType: type,
+            details, caseNo,
+            status:    'open',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        showToast('Blotter report filed! Case No: ' + caseNo, '#333');
+        toggleBlotterForm();
+        document.getElementById('bltComplainant').value = '';
+        document.getElementById('bltRespondent').value  = '';
+        document.getElementById('bltDate').value        = '';
+        document.getElementById('bltDetails').value     = '';
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+    }
+
+    btn.disabled  = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Report';
+}
+
+function loadBlotter(uid) {
+    // Admin sees all, residents see only their own
+    let query = isAdmin
+        ? db.collection('blotter').orderBy('createdAt', 'desc')
+        : db.collection('blotter').where('uid', '==', uid).orderBy('createdAt', 'desc');
+
+    query.onSnapshot(snap => {
+        allBlotters = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderBlotter(allBlotters);
+    });
+}
+
+function filterBlotter() {
+    const search = document.getElementById('bltSearch').value.toLowerCase();
+    const status = document.getElementById('bltStatusFilter').value;
+    const filtered = allBlotters.filter(b =>
+        (!search || b.complainant?.toLowerCase().includes(search) || b.respondent?.toLowerCase().includes(search) || b.caseNo?.toLowerCase().includes(search)) &&
+        (!status || b.status === status)
+    );
+    renderBlotter(filtered);
+}
+
+function renderBlotter(list) {
+    const tbody = document.getElementById('blotterTableBody');
+    const cols  = isAdmin ? 7 : 6;
+
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center;color:#999;padding:2rem;">No blotter records found.</td></tr>`;
+        return;
+    }
+
+    const statusColors = {
+        'open':                 { bg:'#dbeafe', color:'#1d4ed8' },
+        'under investigation':  { bg:'#fef9c3', color:'#a16207' },
+        'resolved':             { bg:'#f0f0f0', color:'#333' },
+        'closed':               { bg:'#f3f4f6', color:'#374151' },
+    };
+
+    tbody.innerHTML = list.map(b => {
+        const sc = statusColors[b.status] || statusColors['open'];
+        return `<tr>
+            <td style="font-size:0.7rem;font-weight:600;">${b.caseNo || '—'}</td>
+            <td>${formatDate(b.createdAt)}</td>
+            <td>${b.complainant || '—'}</td>
+            <td>${b.respondent  || '—'}</td>
+            <td style="font-size:0.75rem;">${b.incidentType || '—'}</td>
+            <td>
+                <span style="background:${sc.bg};color:${sc.color};padding:0.2rem 0.6rem;border-radius:20px;font-size:0.65rem;font-weight:600;white-space:nowrap;">
+                    ${b.status || 'open'}
+                </span>
+            </td>
+            ${isAdmin ? `
+            <td>
+                <select onchange="updateBlotterStatus('${b.id}', this.value)"
+                        style="padding:0.3rem 0.5rem;border:1px solid #fce7f3;border-radius:8px;font-size:0.75rem;cursor:pointer;">
+                    <option value="open"               ${b.status==='open'               ?'selected':''}>Open</option>
+                    <option value="under investigation" ${b.status==='under investigation'?'selected':''}>Under Investigation</option>
+                    <option value="resolved"           ${b.status==='resolved'           ?'selected':''}>Resolved</option>
+                    <option value="closed"             ${b.status==='closed'             ?'selected':''}>Closed</option>
+                </select>
+            </td>` : ''}
+        </tr>`;
+    }).join('');
+}
+
+async function updateBlotterStatus(id, status) {
+    try {
+        await db.collection('blotter').doc(id).update({ status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        showToast('Status updated to: ' + status, '#333');
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+    }
+}
+</script>
+</body>
+</html>

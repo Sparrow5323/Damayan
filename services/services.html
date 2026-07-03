@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Services</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="info-card">
+                <h3><i class="fas fa-file-alt"></i> Available e-Services</h3>
+                <p style="color:#666;margin-bottom:0.5rem;">Select a service to apply online. Requirements will be reviewed by barangay staff.</p>
+
+                <!-- My Recent Requests -->
+                <div style="background:#fff5f7;border-radius:12px;padding:1rem;margin-bottom:1.5rem;border:1px solid #fce7f3;">
+                    <h4 style="color:#333;font-size:0.85rem;margin-bottom:0.8rem;"><i class="fas fa-history"></i> My Recent Requests</h4>
+                    <div style="overflow-x:auto;">
+                        <table class="request-table" style="font-size:0.8rem;">
+                            <thead><tr><th>Ref #</th><th>Service</th><th>Status</th><th>Date</th></tr></thead>
+                            <tbody id="myRecentRequests">
+                                <tr><td colspan="4" style="text-align:center;color:#999;padding:1rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Service Cards -->
+                <div class="services-grid">
+                    <div class="service-card" onclick="redirectToRoot('clearance/clearance.html')">
+                        <i class="fas fa-file-signature"></i>
+                        <h4>Barangay Clearance</h4>
+                        <p>Request a clearance certificate for employment, school, or other purposes.</p>
+                    </div>
+                    <div class="service-card" onclick="redirectToRoot('barangay-id/barangay-id.html')">
+                        <i class="fas fa-id-card"></i>
+                        <h4>Barangay ID</h4>
+                        <p>Apply for an official Barangay Damayang Lagi identification card.</p>
+                    </div>
+                    <div class="service-card" onclick="redirectToRoot('business-permit/business-permit.html')">
+                        <i class="fas fa-store"></i>
+                        <h4>Business Permit</h4>
+                        <p>Apply for a barangay permit to operate your business.</p>
+                    </div>
+                    <div class="service-card" onclick="redirectToRoot('blotter/blotter.html')">
+                        <i class="fas fa-gavel"></i>
+                        <h4>Blotter Records</h4>
+                        <p>File an incident complaint or check the status of a blotter report.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+requireAuth(async user => {
+    loadSidebar('services');
+    loadTopbar();
+
+    // Load user's recent requests
+    const snap = await db.collection('requests')
+        .where('uid', '==', user.uid)
+        .orderBy('createdAt', 'desc')
+        .limit(5)
+        .get();
+
+    const tbody = document.getElementById('myRecentRequests');
+    if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#999;padding:1rem;">No requests yet. Apply using the services below.</td></tr>`;
+        return;
+    }
+
+    const cls = { pending:'status-pending', approved:'status-approved', rejected:'status-rejected' };
+    tbody.innerHTML = snap.docs.map(d => {
+        const r = d.data();
+        return `<tr>
+            <td style="font-size:0.7rem;font-weight:600;">${r.refNo || '—'}</td>
+            <td>${r.serviceType || '—'}</td>
+            <td><span class="status ${cls[r.status]||'status-pending'}" style="font-size:0.65rem;">${r.status ? r.status.charAt(0).toUpperCase()+r.status.slice(1) : ''}</span></td>
+            <td>${formatDate(r.createdAt)}</td>
+        </tr>`;
+    }).join('');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Barangay ID</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="id-application-container">
+
+                <!-- FORM SIDE -->
+                <div class="id-form-side">
+                    <div class="form-header">
+                        <h3><i class="fas fa-id-card"></i> Barangay ID Application</h3>
+                        <button class="back-home" onclick="redirectToRoot('services/services.html')">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                    <div class="id-form">
+                        <div class="form-section">
+                            <div class="form-section-title">Personal Information</div>
+                            <div class="form-field">
+                                <label>Full Name *</label>
+                                <input type="text" id="appFullName" oninput="updatePreview()" placeholder="Juan Dela Cruz">
+                            </div>
+                            <div class="form-field">
+                                <label>Date of Birth *</label>
+                                <input type="date" id="appDob" oninput="updatePreview()">
+                            </div>
+                            <div class="form-field">
+                                <label>Gender *</label>
+                                <select id="appGender" onchange="updatePreview()">
+                                    <option value="">Select</option>
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Complete Address *</label>
+                                <input type="text" id="appAddress" oninput="updatePreview()" placeholder="House No., Street, Barangay">
+                            </div>
+                            <div class="form-field">
+                                <label>Contact Number *</label>
+                                <input type="tel" id="appContact" placeholder="09XXXXXXXXX">
+                            </div>
+                        </div>
+
+                        <!-- Previous Applications -->
+                        <div class="form-section">
+                            <div class="form-section-title">My ID Applications</div>
+                            <div style="overflow-x:auto;">
+                                <table class="clearance-table">
+                                    <thead><tr><th>Ref #</th><th>Status</th><th>Date</th></tr></thead>
+                                    <tbody id="idHistoryBody">
+                                        <tr><td colspan="3" style="text-align:center;color:#999;padding:1rem;">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        </td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <button class="submit-btn" id="idSubmitBtn" onclick="submitIDApplication()">
+                            <i class="fas fa-paper-plane"></i> Submit Application
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PREVIEW SIDE -->
+                <div class="id-preview-side">
+                    <div class="preview-header">
+                        <i class="fas fa-eye"></i> Live ID Preview
+                    </div>
+                    <div class="id-card-preview">
+                        <div class="id-card">
+                            <div class="id-card-header">
+                                <i class="fas fa-id-card"></i>
+                                <h4>BARANGAY DAMAYANG LAGI</h4>
+                                <p style="font-size:0.75rem;opacity:0.85;">Republic of the Philippines</p>
+                            </div>
+                            <div class="id-card-photo">
+                                <div class="id-card-avatar"><i class="fas fa-user-circle"></i></div>
+                            </div>
+                            <div class="id-card-details">
+                                <div class="id-card-row"><span class="id-card-label">Name:</span><span class="id-card-value" id="previewName">Juan Dela Cruz</span></div>
+                                <div class="id-card-row"><span class="id-card-label">Gender:</span><span class="id-card-value" id="previewGender">—</span></div>
+                                <div class="id-card-row"><span class="id-card-label">Birth:</span><span class="id-card-value" id="previewDob">—</span></div>
+                                <div class="id-card-row"><span class="id-card-label">Address:</span><span class="id-card-value" id="previewAddress">Barangay Damayang Lagi</span></div>
+                                <div class="id-card-row"><span class="id-card-label">ID No.:</span><span class="id-card-value" id="previewRefNo">Pending</span></div>
+                            </div>
+                            <div class="id-card-footer">
+                                <p>Official Barangay ID · Valid Until December 31, <?= date('Y') + 1 ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+requireAuth(async user => {
+    loadSidebar('services');
+    loadTopbar();
+
+    // Pre-fill from profile
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists) {
+        const p = snap.data();
+        document.getElementById('appFullName').value = p.fullName || '';
+        document.getElementById('appAddress').value  = p.address  || '';
+        document.getElementById('appContact').value  = p.contactNumber || '';
+        if (p.dob)    document.getElementById('appDob').value    = p.dob;
+        if (p.gender) document.getElementById('appGender').value = p.gender;
+        updatePreview();
+    }
+
+    loadIDHistory(user.uid);
+});
+
+function updatePreview() {
+    const name    = document.getElementById('appFullName').value || 'Juan Dela Cruz';
+    const gender  = document.getElementById('appGender').value   || '—';
+    const address = document.getElementById('appAddress').value  || 'Barangay Damayang Lagi';
+    const dob     = document.getElementById('appDob').value;
+
+    document.getElementById('previewName').textContent    = name;
+    document.getElementById('previewGender').textContent  = gender;
+    document.getElementById('previewAddress').textContent = address;
+    document.getElementById('previewDob').textContent     = dob
+        ? new Date(dob + 'T00:00:00').toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
+        : '—';
+}
+
+async function submitIDApplication() {
+    const name    = document.getElementById('appFullName').value.trim();
+    const dob     = document.getElementById('appDob').value;
+    const gender  = document.getElementById('appGender').value;
+    const address = document.getElementById('appAddress').value.trim();
+    const contact = document.getElementById('appContact').value.trim();
+
+    if (!name || !dob || !gender || !address || !contact) {
+        showToast('Please fill in all required fields.', '#dc2626'); return;
+    }
+
+    const btn = document.getElementById('idSubmitBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const refNo = genRefNo('ID');
+        await db.collection('requests').add({
+            uid:         auth.currentUser.uid,
+            email:       auth.currentUser.email,
+            serviceType: 'Barangay ID',
+            fullName:    name,
+            dob, gender, address,
+            contactNumber: contact,
+            refNo,
+            status:    'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        document.getElementById('previewRefNo').textContent = refNo;
+        showToast('ID Application submitted! Ref: ' + refNo, '#333');
+        loadIDHistory(auth.currentUser.uid);
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+    }
+
+    btn.disabled  = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
+}
+
+function loadIDHistory(uid) {
+    db.collection('requests')
+      .where('uid', '==', uid)
+      .where('serviceType', '==', 'Barangay ID')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snap => {
+          const tbody = document.getElementById('idHistoryBody');
+          if (snap.empty) {
+              tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#999;padding:1rem;">No applications yet</td></tr>`;
+              return;
+          }
+          tbody.innerHTML = snap.docs.map(d => {
+              const r = d.data();
+              const cls = { pending:'status-pending-clearance', approved:'status-approved-clearance', rejected:'status-rejected-clearance' }[r.status] || '';
+              return `<tr>
+                  <td style="font-size:0.7rem;">${r.refNo || '—'}</td>
+                  <td><span class="status-badge ${cls}">${r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : ''}</span></td>
+                  <td>${formatDate(r.createdAt)}</td>
+              </tr>`;
+          }).join('');
+      });
+}
+</script>
+</body>
+</html>

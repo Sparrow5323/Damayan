@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Business Permit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="business-container">
+                <div class="business-header">
+                    <h3><i class="fas fa-store"></i> Business Permit Application</h3>
+                    <button class="back-home" onclick="redirectToRoot('services/services.html')">
+                        <i class="fas fa-arrow-left"></i> Back to Services
+                    </button>
+                </div>
+                <div class="business-body">
+                    <div class="business-two-col">
+
+                        <!-- FORM -->
+                        <div class="business-form-col">
+                            <div class="col-title"><i class="fas fa-edit"></i> Applicant Information</div>
+
+                            <div class="business-field">
+                                <label>Full Name *</label>
+                                <input type="text" id="bizName" placeholder="Owner's full name">
+                            </div>
+                            <div class="business-field">
+                                <label>Home Address *</label>
+                                <input type="text" id="bizAddress" placeholder="Complete home address">
+                            </div>
+                            <div class="business-field">
+                                <label>Contact Number *</label>
+                                <input type="tel" id="bizContact" placeholder="09XXXXXXXXX">
+                            </div>
+                            <div class="business-field">
+                                <label>Business Name *</label>
+                                <input type="text" id="bizBusinessName" placeholder="Name of the business">
+                            </div>
+                            <div class="business-field">
+                                <label>Business Address *</label>
+                                <input type="text" id="bizBusinessAddress" placeholder="Business location">
+                            </div>
+                            <div class="business-field">
+                                <label>Business Type *</label>
+                                <select id="bizType">
+                                    <option value="">Select type</option>
+                                    <option>Sari-sari Store</option>
+                                    <option>Retail Store</option>
+                                    <option>Food Business</option>
+                                    <option>Online Shop</option>
+                                    <option>Service Shop</option>
+                                    <option>Others</option>
+                                </select>
+                            </div>
+                            <div class="business-field">
+                                <label>Business Description</label>
+                                <textarea id="bizDescription" rows="3"
+                                          style="width:100%;padding:0.7rem;border:1px solid #cfdfcd;border-radius:8px;font-size:0.85rem;"
+                                          placeholder="Brief description of your business..."></textarea>
+                            </div>
+
+                            <button type="button" id="bizSubmitBtn" class="submit-business-btn" onclick="submitBusinessPermit()">
+                                <i class="fas fa-paper-plane"></i> Submit Application
+                            </button>
+                        </div>
+
+                        <!-- HISTORY -->
+                        <div class="business-history-col">
+                            <div class="col-title"><i class="fas fa-history"></i> Permit History</div>
+                            <div class="business-table-wrapper">
+                                <table class="business-table">
+                                    <thead>
+                                        <tr><th>Ref #</th><th>Business</th><th>Type</th><th>Status</th><th>Date</th></tr>
+                                    </thead>
+                                    <tbody id="bizHistoryBody">
+                                        <tr><td colspan="5" style="text-align:center;color:#999;padding:2rem;">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                                        </td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+requireAuth(async user => {
+    loadSidebar('services');
+    loadTopbar();
+
+    // Pre-fill
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists) {
+        const p = snap.data();
+        document.getElementById('bizName').value    = p.fullName || '';
+        document.getElementById('bizAddress').value = p.address  || '';
+        document.getElementById('bizContact').value = p.contactNumber || '';
+    }
+
+    loadBizHistory(user.uid);
+});
+
+async function submitBusinessPermit() {
+    const name            = document.getElementById('bizName').value.trim();
+    const address         = document.getElementById('bizAddress').value.trim();
+    const contact         = document.getElementById('bizContact').value.trim();
+    const businessName    = document.getElementById('bizBusinessName').value.trim();
+    const businessAddress = document.getElementById('bizBusinessAddress').value.trim();
+    const type            = document.getElementById('bizType').value;
+    const description     = document.getElementById('bizDescription').value.trim();
+
+    if (!name || !address || !contact || !businessName || !businessAddress || !type) {
+        showToast('Please fill in all required fields.', '#dc2626'); return;
+    }
+
+    const btn = document.getElementById('bizSubmitBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const refNo = genRefNo('BIZ');
+        await db.collection('requests').add({
+            uid:         auth.currentUser.uid,
+            email:       auth.currentUser.email,
+            serviceType: 'Business Permit',
+            fullName:    name,
+            address, contactNumber: contact,
+            businessName, businessAddress,
+            businessType: type, description,
+            refNo,
+            status:    'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        showToast('Application submitted! Ref: ' + refNo, '#333');
+        loadBizHistory(auth.currentUser.uid);
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+    }
+
+    btn.disabled  = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
+}
+
+function loadBizHistory(uid) {
+    db.collection('requests')
+      .where('uid', '==', uid)
+      .where('serviceType', '==', 'Business Permit')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snap => {
+          const tbody = document.getElementById('bizHistoryBody');
+          if (snap.empty) {
+              tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999;padding:2rem;">No records yet</td></tr>`;
+              return;
+          }
+          tbody.innerHTML = snap.docs.map(d => {
+              const r = d.data();
+              const cls = { pending:'status-pending-clearance', approved:'status-approved-clearance', rejected:'status-rejected-clearance' }[r.status] || '';
+              return `<tr>
+                  <td style="font-size:0.7rem;">${r.refNo || '—'}</td>
+                  <td>${r.businessName || '—'}</td>
+                  <td>${r.businessType || '—'}</td>
+                  <td><span class="status-badge ${cls}">${r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : ''}</span></td>
+                  <td>${formatDate(r.createdAt)}</td>
+              </tr>`;
+          }).join('');
+      });
+}
+</script>
+</body>
+</html>

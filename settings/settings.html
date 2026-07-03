@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="info-card">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+
+                <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-top:1rem;">
+
+                    <!-- Settings Menu -->
+                    <div style="width:220px;background:#fff5f7;border-radius:16px;padding:1rem;border:1px solid #fce7f3;">
+                        <h4 style="color:#333;font-size:0.8rem;margin-bottom:1rem;"><i class="fas fa-sliders-h"></i> Settings</h4>
+                        <ul style="list-style:none;padding:0;">
+                            <li class="settings-menu-item active" id="menu-profile" onclick="showSettingsPanel('profile',this)"
+                                style="padding:0.8rem;margin:0.2rem 0;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:0.8rem;background:#fff5f7;color:#333;font-weight:600;">
+                                <i class="fas fa-user-circle" style="width:20px;"></i> My Profile
+                            </li>
+                            <li class="settings-menu-item" id="menu-password" onclick="showSettingsPanel('password',this)"
+                                style="padding:0.8rem;margin:0.2rem 0;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:0.8rem;color:#555;">
+                                <i class="fas fa-lock" style="width:20px;"></i> Change Password
+                            </li>
+                            <li class="settings-menu-item" id="menu-display" onclick="showSettingsPanel('display',this)"
+                                style="padding:0.8rem;margin:0.2rem 0;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:0.8rem;color:#555;">
+                                <i class="fas fa-desktop" style="width:20px;"></i> Display
+                            </li>
+                            <li class="settings-menu-item" id="menu-notif" onclick="showSettingsPanel('notif',this)"
+                                style="padding:0.8rem;margin:0.2rem 0;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:0.8rem;color:#555;">
+                                <i class="fas fa-bell" style="width:20px;"></i> Notifications
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Settings Content -->
+                    <div style="flex:1;min-width:300px;">
+
+                        <!-- Profile Panel -->
+                        <div id="panel-profile" class="settings-panel">
+                            <div style="background:#fff5f7;border-radius:16px;padding:1.5rem;border:1px solid #fce7f3;">
+                                <h4 style="color:#333;margin-bottom:1.2rem;"><i class="fas fa-user-circle"></i> My Profile</h4>
+
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                                    <div>
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">First Name</label>
+                                        <input type="text" id="sFirstName" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Last Name</label>
+                                        <input type="text" id="sLastName" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Contact Number</label>
+                                        <input type="tel" id="sContact" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Civil Status</label>
+                                        <select id="sCivilStatus" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                            <option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
+                                        </select>
+                                    </div>
+                                    <div style="grid-column:span 2;">
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Address</label>
+                                        <input type="text" id="sAddress" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    </div>
+                                    <div style="grid-column:span 2;">
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Email (read-only)</label>
+                                        <input type="email" id="sEmail" disabled style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;background:#f0f0f0;">
+                                    </div>
+                                </div>
+
+                                <button onclick="saveProfile()"
+                                        style="background:#be185d;color:white;border:none;padding:0.7rem 1.5rem;border-radius:8px;cursor:pointer;font-weight:600;margin-top:1rem;">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Password Panel -->
+                        <div id="panel-password" class="settings-panel" style="display:none;">
+                            <div style="background:#fff5f7;border-radius:16px;padding:1.5rem;border:1px solid #fce7f3;">
+                                <h4 style="color:#333;margin-bottom:1.2rem;"><i class="fas fa-lock"></i> Change Password</h4>
+                                <div style="max-width:400px;">
+                                    <div style="margin-bottom:1rem;">
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Current Password</label>
+                                        <input type="password" id="pwdCurrent" placeholder="••••••••"
+                                               style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    </div>
+                                    <div style="margin-bottom:1rem;">
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">New Password</label>
+                                        <input type="password" id="pwdNew" placeholder="Min. 6 characters"
+                                               style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    </div>
+                                    <div style="margin-bottom:1.5rem;">
+                                        <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Confirm New Password</label>
+                                        <input type="password" id="pwdConfirm" placeholder="Repeat new password"
+                                               style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    </div>
+                                    <button onclick="changePassword()"
+                                            style="background:#be185d;color:white;border:none;padding:0.7rem 1.5rem;border-radius:8px;cursor:pointer;font-weight:600;">
+                                        <i class="fas fa-key"></i> Update Password
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Display Panel -->
+                        <div id="panel-display" class="settings-panel" style="display:none;">
+                            <div style="background:#fff5f7;border-radius:16px;padding:1.5rem;border:1px solid #fce7f3;">
+                                <h4 style="color:#333;margin-bottom:1rem;"><i class="fas fa-palette"></i> Theme Preference</h4>
+                                <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                                    <div class="theme-option active" id="themeLight" onclick="setTheme('light')"
+                                         style="flex:1;text-align:center;padding:1rem;border:2px solid #be185d;border-radius:12px;cursor:pointer;background:white;">
+                                        <i class="fas fa-sun" style="font-size:1.5rem;color:#eab308;"></i>
+                                        <p style="margin-top:0.5rem;font-size:0.8rem;font-weight:600;">Light</p>
+                                    </div>
+                                    <div class="theme-option" id="themeDark" onclick="setTheme('dark')"
+                                         style="flex:1;text-align:center;padding:1rem;border:2px solid #fce7f3;border-radius:12px;cursor:pointer;background:#1a1a2e;">
+                                        <i class="fas fa-moon" style="font-size:1.5rem;color:#a78bfa;"></i>
+                                        <p style="margin-top:0.5rem;font-size:0.8rem;font-weight:600;color:#fff;">Dark</p>
+                                    </div>
+                                </div>
+                                <p style="color:#999;font-size:0.75rem;margin-top:1rem;">Theme preference is saved locally in your browser.</p>
+                            </div>
+                        </div>
+
+                        <!-- Notifications Panel -->
+                        <div id="panel-notif" class="settings-panel" style="display:none;">
+                            <div style="background:#fff5f7;border-radius:16px;padding:1.5rem;border:1px solid #fce7f3;">
+                                <h4 style="color:#333;margin-bottom:1rem;"><i class="fas fa-bell"></i> Notification Preferences</h4>
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #fce7f3;">
+                                    <div>
+                                        <p style="font-weight:600;font-size:0.85rem;">Email Notifications</p>
+                                        <p style="font-size:0.7rem;color:#999;">Get notified about request updates via email</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="toggleEmail" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+                                    <div>
+                                        <p style="font-weight:600;font-size:0.85rem;">Announcement Alerts</p>
+                                        <p style="font-size:0.7rem;color:#999;">Get notified of new barangay announcements</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="toggleAnnounce" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <button onclick="saveNotifPrefs()"
+                                        style="background:#be185d;color:white;border:none;padding:0.7rem 1.5rem;border-radius:8px;cursor:pointer;font-weight:600;">
+                                    <i class="fas fa-save"></i> Save Preferences
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+requireAuth(async user => {
+    loadSidebar('settings');
+    loadTopbar();
+
+    // Load profile
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists) {
+        const p = snap.data();
+        document.getElementById('sFirstName').value   = p.firstName     || '';
+        document.getElementById('sLastName').value    = p.lastName      || '';
+        document.getElementById('sContact').value     = p.contactNumber || '';
+        document.getElementById('sAddress').value     = p.address       || '';
+        document.getElementById('sEmail').value       = p.email         || user.email;
+        if (p.civilStatus) document.getElementById('sCivilStatus').value = p.civilStatus;
+
+        // Notification prefs
+        if (p.notifEmail    !== undefined) document.getElementById('toggleEmail').checked    = p.notifEmail;
+        if (p.notifAnnounce !== undefined) document.getElementById('toggleAnnounce').checked = p.notifAnnounce;
+    }
+
+    // Theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme, false);
+});
+
+function showSettingsPanel(name, btn) {
+    document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.settings-menu-item').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'transparent';
+        b.style.color      = '#555';
+        b.style.fontWeight = '500';
+    });
+    document.getElementById('panel-' + name).style.display = 'block';
+    btn.classList.add('active');
+    btn.style.background = '#fff5f7';
+    btn.style.color      = '#333';
+    btn.style.fontWeight = '600';
+}
+
+async function saveProfile() {
+    const user = auth.currentUser;
+    const firstName   = document.getElementById('sFirstName').value.trim();
+    const lastName    = document.getElementById('sLastName').value.trim();
+    const contact     = document.getElementById('sContact').value.trim();
+    const address     = document.getElementById('sAddress').value.trim();
+    const civilStatus = document.getElementById('sCivilStatus').value;
+
+    if (!firstName || !lastName) { showToast('First and last name are required.', '#dc2626'); return; }
+
+    try {
+        await db.collection('users').doc(user.uid).update({
+            firstName, lastName,
+            fullName: `${firstName} ${lastName}`.trim(),
+            contactNumber: contact,
+            address, civilStatus,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        await user.updateProfile({ displayName: `${firstName} ${lastName}` });
+        showToast('Profile updated!', '#333');
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+    }
+}
+
+async function changePassword() {
+    const current = document.getElementById('pwdCurrent').value;
+    const newPwd  = document.getElementById('pwdNew').value;
+    const confirm = document.getElementById('pwdConfirm').value;
+
+    if (!current || !newPwd || !confirm) { showToast('All password fields are required.', '#dc2626'); return; }
+    if (newPwd !== confirm) { showToast('New passwords do not match.', '#dc2626'); return; }
+    if (newPwd.length < 6)  { showToast('New password must be at least 6 characters.', '#dc2626'); return; }
+
+    try {
+        const user       = auth.currentUser;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, current);
+        await user.reauthenticateWithCredential(credential);
+        await user.updatePassword(newPwd);
+        showToast('Password updated!', '#333');
+        document.getElementById('pwdCurrent').value = '';
+        document.getElementById('pwdNew').value     = '';
+        document.getElementById('pwdConfirm').value = '';
+    } catch (e) {
+        const msgs = {
+            'auth/wrong-password': 'Current password is incorrect.',
+            'auth/too-many-requests': 'Too many attempts. Please wait.',
+        };
+        showToast(msgs[e.code] || 'Error: ' + e.message, '#dc2626');
+    }
+}
+
+function setTheme(theme, save = true) {
+    // Apply to body immediately
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+
+    // Update button borders
+    document.getElementById('themeLight').style.borderColor = theme === 'light' ? '#be185d' : '#fce7f3';
+    document.getElementById('themeDark').style.borderColor  = theme === 'dark'  ? '#be185d' : '#fce7f3';
+    document.getElementById('themeLight').style.background  = theme === 'light' ? 'white' : 'transparent';
+    document.getElementById('themeDark').style.background   = theme === 'dark'  ? '#1a1a2e' : '#1a1a2e';
+
+    if (save) {
+        localStorage.setItem('theme', theme);
+        showToast((theme === 'dark' ? '🌙 Dark' : '☀️ Light') + ' mode applied.', '#333');
+    }
+}
+
+async function saveNotifPrefs() {
+    const user = auth.currentUser;
+    try {
+        await db.collection('users').doc(user.uid).update({
+            notifEmail:    document.getElementById('toggleEmail').checked,
+            notifAnnounce: document.getElementById('toggleAnnounce').checked,
+            updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        showToast('Notification preferences saved!', '#333');
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+    }
+}
+</script>
+</body>
+</html>

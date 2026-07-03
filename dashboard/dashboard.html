@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container">
+<div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+
+    <div class="sidebar" id="sidebarMount"></div>
+
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+
+        <div class="tab-pane active-tab">
+
+            <!-- Welcome -->
+            <div class="welcome-section">
+                <h2><i class="fas fa-hand-peace"></i> Welcome back, <span id="welcomeName">...</span>!</h2>
+                <p>Here's what's happening in your Barangay today.</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-number" id="statResidents">—</div>
+                    <div class="stat-label">Total Residents</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-file-signature"></i></div>
+                    <div class="stat-number" id="statRequests">—</div>
+                    <div class="stat-label">Total Requests</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-number" id="statPending">—</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-number" id="statApproved">—</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+            </div>
+
+            <!-- Recent Requests -->
+            <div class="recent-section">
+                <div class="section-header">
+                    <i class="fas fa-history"></i>
+                    <h3>Recent Requests</h3>
+                    <a href="../services/services.html" class="view-all" style="margin-left:auto;">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="request-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Ref #</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentRequestsBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center;color:#999;padding:2rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Latest Announcements -->
+            <div class="recent-section" style="margin-top:1.5rem;">
+                <div class="section-header">
+                    <i class="fas fa-bullhorn"></i>
+                    <h3>Latest Announcements</h3>
+                    <a href="../announcement/announcement.html" class="view-all" style="margin-left:auto;">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div id="dashAnnouncements" style="padding:1rem;">
+                    <p style="color:#999;text-align:center;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+requireAuth(async user => {
+    loadSidebar('dashboard');
+    loadTopbar();
+    await loadDashboard(user);
+});
+
+async function loadDashboard(user) {
+    // Get user profile
+    const snap = await db.collection('users').doc(user.uid).get();
+    const profile = snap.exists ? snap.data() : {};
+    const firstName = profile.firstName || user.displayName?.split(' ')[0] || 'User';
+    document.getElementById('welcomeName').textContent = firstName;
+
+    const isAdmin = profile.role === 'admin';
+
+    // ── Stats ──────────────────────────────────────────────
+    if (isAdmin) {
+        // Admin sees all data
+        const [residents, allReqs, pendingReqs, approvedReqs] = await Promise.all([
+            db.collection('residents').get(),
+            db.collection('requests').get(),
+            db.collection('requests').where('status','==','pending').get(),
+            db.collection('requests').where('status','==','approved').get(),
+        ]);
+        document.getElementById('statResidents').textContent = residents.size;
+        document.getElementById('statRequests').textContent  = allReqs.size;
+        document.getElementById('statPending').textContent   = pendingReqs.size;
+        document.getElementById('statApproved').textContent  = approvedReqs.size;
+    } else {
+        // Resident sees their own request counts
+        const myReqs     = await db.collection('requests').where('uid','==',user.uid).get();
+        const myPending  = myReqs.docs.filter(d => d.data().status === 'pending').length;
+        const myApproved = myReqs.docs.filter(d => d.data().status === 'approved').length;
+        // Total residents (public count)
+        const totalRes   = await db.collection('residents').get();
+        document.getElementById('statResidents').textContent = totalRes.size;
+        document.getElementById('statRequests').textContent  = myReqs.size;
+        document.getElementById('statPending').textContent   = myPending;
+        document.getElementById('statApproved').textContent  = myApproved;
+    }
+
+    // ── Recent Requests ─────────────────────────────────────
+    let reqQuery = isAdmin
+        ? db.collection('requests').orderBy('createdAt','desc').limit(5)
+        : db.collection('requests').where('uid','==',user.uid).orderBy('createdAt','desc').limit(5);
+
+    const reqSnap = await reqQuery.get();
+    const tbody   = document.getElementById('recentRequestsBody');
+
+    if (reqSnap.empty) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999;padding:2rem;">No recent requests</td></tr>`;
+    } else {
+        tbody.innerHTML = reqSnap.docs.map(d => {
+            const r = d.data();
+            const statusClass = { pending:'status-pending', approved:'status-approved', rejected:'status-rejected' }[r.status] || 'status-pending';
+            return `<tr>
+                <td>${r.fullName || '—'}</td>
+                <td>${r.serviceType || '—'}</td>
+                <td><span class="status ${statusClass}">${capitalize(r.status)}</span></td>
+                <td>${formatDate(r.createdAt)}</td>
+                <td style="font-size:0.7rem;color:#999;">${r.refNo || '—'}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ── Latest Announcements ────────────────────────────────
+    const annSnap = await db.collection('announcements')
+        .where('status','==','active')
+        .orderBy('createdAt','desc')
+        .limit(3)
+        .get();
+
+    const annEl = document.getElementById('dashAnnouncements');
+    if (annSnap.empty) {
+        annEl.innerHTML = `<p style="color:#999;text-align:center;">No announcements yet.</p>`;
+    } else {
+        const colors = { Emergency:'#fee2e2', High:'#ffedd5', Medium:'#fef9c3', Low:'#f0f0f0' };
+        annEl.innerHTML = `<div class="announce-list">` +
+            annSnap.docs.map(d => {
+                const a = d.data();
+                const bg = colors[a.priority] || '#fff5f7';
+                return `
+                <div class="announce-item" style="border-left:4px solid #be185d;background:${bg};">
+                    <div class="announce-icon"><i class="fas fa-bullhorn"></i></div>
+                    <div class="announce-content">
+                        <h4>${a.title || 'Untitled'}</h4>
+                        <p>${(a.message || '').substring(0,100)}${a.message?.length > 100 ? '…' : ''}</p>
+                        <span class="announce-date">${formatDate(a.createdAt)}</span>
+                    </div>
+                </div>`;
+            }).join('') + `</div>`;
+    }
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+</script>
+</body>
+</html>

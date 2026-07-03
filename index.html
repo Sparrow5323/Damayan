@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app-container">
+    <div id="loginView" class="view active-view">
+        <div class="glass-card">
+            <div class="login-grid">
+                <!-- LOGIN FORM -->
+                <div class="login-form-wrapper">
+                    <div class="login-form">
+                        <h2>Log in</h2>
+
+                        <div id="loginError" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.4);color:#fca5a5;padding:0.7rem 1rem;border-radius:10px;font-size:0.8rem;margin-bottom:1rem;"></div>
+
+                        <div class="input-group">
+                            <label><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="loginEmail" placeholder="your@email.com">
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-lock"></i> Password</label>
+                            <div style="position:relative;">
+                                <input type="password" id="loginPassword" placeholder="••••••••" style="padding-right:45px;">
+                                <i class="fas fa-eye" id="togglePassword"
+                                   style="position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;color:rgba(255,255,255,0.7);"></i>
+                            </div>
+                        </div>
+
+                        <div class="forgot-row">
+                            <a href="forgot-password/forgot-password.html">Forgot Password?</a>
+                        </div>
+
+                        <button class="btn-login" id="loginBtn" onclick="handleLogin()">LOG IN</button>
+
+                        <div class="signup-link">
+                            Don't have an account? <a href="signup/signup.html">Sign up</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BRAND AREA -->
+                <div class="brand-area">
+                    <div class="brand-header-row">
+                        <div class="brand-icon-wrapper"><i class="fas fa-landmark"></i></div>
+                        <div class="brand-text-group">
+                            <h1>Barangay Damayang Lagi</h1>
+                            <div class="tag">Management System · e-Services</div>
+                        </div>
+                    </div>
+                    <div class="barangay-img">
+                        <img src="https://placehold.co/600x400/eef2e6/2e5c2e?text=Barangay+Hall" alt="Barangay Hall">
+                    </div>
+                    <div class="hall-address">
+                        <i class="fas fa-map-pin"></i> Barangay Damayang Lagi Hall
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDKs (compat version for easy use) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+
+<script>
+// Password toggle
+const togglePassword = document.getElementById('togglePassword');
+const passwordInput  = document.getElementById('loginPassword');
+togglePassword.addEventListener('mousedown',  () => { passwordInput.type = 'text';     togglePassword.classList.replace('fa-eye','fa-eye-slash'); });
+togglePassword.addEventListener('mouseup',    () => { passwordInput.type = 'password'; togglePassword.classList.replace('fa-eye-slash','fa-eye'); });
+togglePassword.addEventListener('mouseleave', () => { passwordInput.type = 'password'; togglePassword.classList.replace('fa-eye-slash','fa-eye'); });
+
+// If already logged in, skip to dashboard
+auth.onAuthStateChanged(user => {
+    if (user) redirectToRoot('dashboard/dashboard.html');
+});
+
+// Enter key triggers login
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+});
+
+async function handleLogin() {
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl  = document.getElementById('loginError');
+    const btn      = document.getElementById('loginBtn');
+
+    errorEl.style.display = 'none';
+
+    if (!email || !password) {
+        errorEl.textContent  = 'Please enter your email and password.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = 'Logging in...';
+
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        // onAuthStateChanged above will redirect
+    } catch (err) {
+        btn.disabled    = false;
+        btn.textContent = 'LOG IN';
+        errorEl.textContent  = friendlyError(err.code);
+        errorEl.style.display = 'block';
+    }
+}
+
+function friendlyError(code) {
+    const map = {
+        'auth/user-not-found':      'No account found with that email.',
+        'auth/wrong-password':      'Incorrect password. Please try again.',
+        'auth/invalid-email':       'Please enter a valid email address.',
+        'auth/too-many-requests':   'Too many failed attempts. Please wait and try again.',
+        'auth/user-disabled':       'This account has been disabled.',
+        'auth/network-request-failed': 'Network error. Check your connection.',
+    };
+    return map[code] || 'Login failed. Please check your credentials.';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="info-card">
+                <h3><i class="fas fa-calendar-alt"></i> Barangay Events Calendar</h3>
+
+                <!-- Admin Add Event Form -->
+                <div id="adminEventSection" style="display:none;background:#fff5f7;padding:1.5rem;border-radius:12px;margin-bottom:1.5rem;border:1px solid #fce7f3;">
+                    <h4 style="color:#333;margin-bottom:1rem;"><i class="fas fa-plus-circle"></i> Add New Event</h4>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div style="grid-column:span 2;">
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Event Title *</label>
+                            <input type="text" id="evtTitle" placeholder="e.g., Barangay Assembly"
+                                   style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                        </div>
+                        <div style="grid-column:span 2;">
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Description</label>
+                            <input type="text" id="evtDesc" placeholder="e.g., 9:00 AM – Barangay Hall"
+                                   style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Date *</label>
+                            <input type="date" id="evtDate" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Category</label>
+                            <select id="evtCategory" style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                <option>Community Meeting</option>
+                                <option>Health & Wellness</option>
+                                <option>Sports & Recreation</option>
+                                <option>Relief Operation</option>
+                                <option>Others</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:1rem;display:flex;gap:1rem;">
+                        <button class="action-btn" style="background:#be185d;" onclick="addEvent()">
+                            <i class="fas fa-plus"></i> Add Event
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Toggle button for admin -->
+                <div id="adminToggleBtn" style="display:none;margin-bottom:1.5rem;">
+                    <button class="action-btn" style="background:#be185d;" onclick="toggleEventForm()">
+                        <i class="fas fa-plus"></i> Add New Event
+                    </button>
+                </div>
+
+                <!-- Events list -->
+                <h4 style="color:#333;margin-bottom:1rem;"><i class="fas fa-list"></i> Upcoming Events</h4>
+                <div id="calendarEventsList">
+                    <p style="color:#999;padding:2rem;text-align:center;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading events...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+let isAdmin = false;
+
+requireAuth(async user => {
+    loadSidebar('calendar');
+    loadTopbar();
+
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists && snap.data().role === 'admin') {
+        isAdmin = true;
+        document.getElementById('adminToggleBtn').style.display = 'block';
+    }
+
+    loadEvents();
+});
+
+function toggleEventForm() {
+    const f = document.getElementById('adminEventSection');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function addEvent() {
+    const title    = document.getElementById('evtTitle').value.trim();
+    const desc     = document.getElementById('evtDesc').value.trim();
+    const date     = document.getElementById('evtDate').value;
+    const category = document.getElementById('evtCategory').value;
+
+    if (!title || !date) { showToast('Title and date are required.', '#dc2626'); return; }
+
+    try {
+        await db.collection('events').add({
+            title, description: desc, date, category,
+            createdBy: auth.currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        showToast('Event added!', '#333');
+        document.getElementById('evtTitle').value = '';
+        document.getElementById('evtDesc').value  = '';
+        document.getElementById('evtDate').value  = '';
+        document.getElementById('adminEventSection').style.display = 'none';
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+    }
+}
+
+async function deleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
+    await db.collection('events').doc(id).delete();
+    showToast('Event deleted.', '#333');
+}
+
+function loadEvents() {
+    const today = new Date().toISOString().split('T')[0];
+    db.collection('events')
+      .orderBy('date', 'asc')
+      .onSnapshot(snap => {
+          const el = document.getElementById('calendarEventsList');
+          if (snap.empty) {
+              el.innerHTML = `<p style="color:#999;padding:2rem;text-align:center;">No upcoming events.</p>`;
+              return;
+          }
+
+          const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          el.innerHTML = `<div class="calendar-events">` +
+              snap.docs.map(d => {
+                  const ev  = d.data();
+                  const dt  = new Date(ev.date + 'T00:00:00');
+                  const day = dt.getDate();
+                  const mon = monthNames[dt.getMonth()];
+                  const isPast = ev.date < today;
+                  return `
+                  <div class="event-item" style="${isPast ? 'opacity:0.5;' : ''}">
+                      <div class="event-date" style="background:${isPast ? '#9ca3af' : '#be185d'};">
+                          <span class="day">${day}</span>
+                          <span class="month">${mon}</span>
+                      </div>
+                      <div class="event-details" style="flex:1;">
+                          <h4>${ev.title}</h4>
+                          <p>${ev.description || ''}</p>
+                          ${ev.category ? `<span style="font-size:0.65rem;background:#fff5f7;color:#333;padding:0.15rem 0.5rem;border-radius:20px;">${ev.category}</span>` : ''}
+                      </div>
+                      ${isAdmin ? `
+                      <button onclick="deleteEvent('${d.id}')"
+                              style="background:#ef4444;border:none;padding:0.3rem 0.8rem;border-radius:20px;color:white;cursor:pointer;font-size:0.75rem;align-self:flex-start;">
+                          <i class="fas fa-trash"></i>
+                      </button>` : ''}
+                  </div>`;
+              }).join('') + `</div>`;
+      });
+}
+</script>
+</body>
+</html>

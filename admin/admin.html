@@ -1,0 +1,473 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="info-card">
+                <h3><i class="fas fa-shield-alt"></i> Admin Panel</h3>
+
+                <!-- Tabs -->
+                <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:2px solid #eef2e6;flex-wrap:wrap;">
+                    <button class="admin-tab-btn active" id="tab-btn-pending"   onclick="showAdminTab('pending',this)">
+                        <i class="fas fa-clock"></i> Pending Residency <span id="pendingBadge" class="badge"></span>
+                    </button>
+                    <button class="admin-tab-btn" id="tab-btn-residents"  onclick="showAdminTab('residents',this)">
+                        <i class="fas fa-users"></i> Residents
+                    </button>
+                    <button class="admin-tab-btn" id="tab-btn-requests"   onclick="showAdminTab('requests',this)">
+                        <i class="fas fa-file-alt"></i> All Requests
+                    </button>
+                    <button class="admin-tab-btn" id="tab-btn-blotter"    onclick="showAdminTab('blotter',this)">
+                        <i class="fas fa-gavel"></i> Blotter
+                    </button>
+                    <button class="admin-tab-btn" id="tab-btn-users"      onclick="showAdminTab('users',this)">
+                        <i class="fas fa-user-cog"></i> Registered Users
+                    </button>
+                </div>
+
+                <!-- ── TAB: Pending Residency ── -->
+                <div id="tab-pending">
+                    <input type="text" id="pendingSearch" placeholder="Search pending requests..."
+                           style="width:100%;padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;margin-bottom:1rem;"
+                           oninput="filterTable('pendingSearch','pendingBody')">
+                    <div style="overflow-x:auto;">
+                        <table class="request-table" style="width:100%;">
+                            <thead><tr>
+                                <th>Date</th><th>Full Name</th><th>Email</th><th>Contact</th>
+                                <th>Gender</th><th>Civil Status</th><th>Years</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="pendingBody">
+                                <tr><td colspan="8" style="text-align:center;color:#999;padding:2rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ── TAB: Residents ── -->
+                <div id="tab-residents" style="display:none;">
+                    <input type="text" id="residentsSearch" placeholder="Search residents..."
+                           style="width:100%;padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;margin-bottom:1rem;"
+                           oninput="filterTable('residentsSearch','residentsBody')">
+                    <div style="overflow-x:auto;">
+                        <table class="request-table" style="width:100%;">
+                            <thead><tr>
+                                <th>Full Name</th><th>Email</th><th>Contact</th>
+                                <th>Gender</th><th>Civil Status</th><th>Address</th><th>Registered</th>
+                            </tr></thead>
+                            <tbody id="residentsBody">
+                                <tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ── TAB: All Requests ── -->
+                <div id="tab-requests" style="display:none;">
+                    <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                        <input type="text" id="reqSearch" placeholder="Search by name or ref #..."
+                               style="flex:1;min-width:180px;padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;">
+                        <select id="reqStatusFilter" style="padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;">
+                            <option value="">All Status</option>
+                            <option>pending</option><option>approved</option><option>rejected</option>
+                        </select>
+                        <select id="reqTypeFilter" style="padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;">
+                            <option value="">All Types</option>
+                            <option>Barangay Clearance</option><option>Barangay ID</option><option>Business Permit</option>
+                        </select>
+                        <button class="action-btn" style="background:#be185d;" onclick="filterRequests()">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="request-table" style="width:100%;">
+                            <thead><tr>
+                                <th>Ref #</th><th>Name</th><th>Service</th><th>Status</th><th>Date</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="requestsBody">
+                                <tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ── TAB: Blotter ── -->
+                <div id="tab-blotter" style="display:none;">
+                    <input type="text" id="adminBltSearch" placeholder="Search blotter records..."
+                           style="width:100%;padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;margin-bottom:1rem;"
+                           oninput="filterTable('adminBltSearch','adminBltBody')">
+                    <div style="overflow-x:auto;">
+                        <table class="request-table" style="width:100%;">
+                            <thead><tr>
+                                <th>Case No.</th><th>Date</th><th>Complainant</th><th>Respondent</th>
+                                <th>Type</th><th>Status</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="adminBltBody">
+                                <tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ── TAB: Registered Users ── -->
+                <div id="tab-users" style="display:none;">
+                    <input type="text" id="usersSearch" placeholder="Search users..."
+                           style="width:100%;padding:0.8rem;border:1px solid #fce7f3;border-radius:8px;margin-bottom:1rem;"
+                           oninput="filterTable('usersSearch','usersBody')">
+                    <div style="overflow-x:auto;">
+                        <table class="request-table" style="width:100%;">
+                            <thead><tr>
+                                <th>Full Name</th><th>Email</th><th>Contact</th>
+                                <th>Role</th><th>Gender</th><th>Date Registered</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="usersBody">
+                                <tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;display:none;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;width:90%;max-width:400px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+        <div style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="color:white;margin:0;font-size:1rem;"><i class="fas fa-times-circle"></i> Reject Application</h3>
+            <button onclick="closeRejectModal()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:1.5rem;">
+            <input type="hidden" id="rejectDocId">
+            <input type="hidden" id="rejectCollection">
+            <label style="display:block;font-size:0.75rem;font-weight:600;color:#333;margin-bottom:0.5rem;">Reason for rejection *</label>
+            <textarea id="rejectReason" rows="3" placeholder="Provide a reason for rejection..."
+                      style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;font-size:0.85rem;"></textarea>
+            <div style="display:flex;gap:1rem;margin-top:1rem;">
+                <button onclick="confirmReject()"
+                        style="background:#dc2626;border:none;padding:0.7rem 1.5rem;border-radius:20px;color:white;cursor:pointer;font-weight:600;flex:1;">
+                    Confirm Reject
+                </button>
+                <button onclick="closeRejectModal()"
+                        style="background:transparent;border:1px solid #fce7f3;padding:0.7rem 1.5rem;border-radius:20px;cursor:pointer;color:#555;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+let allRequests = [];
+
+requireAuth(async user => {
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (!snap.exists || snap.data().role !== 'admin') {
+        alert('Access denied. Admins only.');
+        window.location.href = '../dashboard/dashboard.html';
+        return;
+    }
+
+    loadSidebar('admin');
+    loadTopbar();
+
+    loadPendingResidency();
+    loadResidents();
+    loadRequests();
+    loadBlotter();
+    loadUsers();
+});
+
+// ── TAB SWITCHING ─────────────────────────────────────────
+function showAdminTab(tab, btn) {
+    ['pending','residents','requests','blotter','users'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+// ── PENDING RESIDENCY ─────────────────────────────────────
+function loadPendingResidency() {
+    db.collection('residents').where('status','==','pending').orderBy('createdAt','desc')
+      .onSnapshot(snap => {
+          const badge = document.getElementById('pendingBadge');
+          badge.textContent = snap.size || '';
+          badge.style.cssText = snap.size ? 'background:#ef4444;color:white;border-radius:20px;padding:0.1rem 0.5rem;font-size:0.65rem;margin-left:0.3rem;' : '';
+
+          const tbody = document.getElementById('pendingBody');
+          if (snap.empty) {
+              tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#999;padding:2rem;">No pending residency requests.</td></tr>`;
+              return;
+          }
+          tbody.innerHTML = snap.docs.map(d => {
+              const r = d.data();
+              return `<tr data-search="${(r.fullName+r.email+r.contactNumber).toLowerCase()}">
+                  <td>${formatDate(r.createdAt)}</td>
+                  <td style="font-weight:600;">${r.fullName || '—'}</td>
+                  <td>${r.email || '—'}</td>
+                  <td>${r.contactNumber || '—'}</td>
+                  <td>${r.gender || '—'}</td>
+                  <td>${r.civilStatus || '—'}</td>
+                  <td>${r.lengthOfResidence ?? '—'} yr(s)</td>
+                  <td style="white-space:nowrap;">
+                      <button onclick="approveResidency('${d.id}')"
+                              style="background:#be185d;border:none;padding:0.25rem 0.8rem;border-radius:20px;color:white;cursor:pointer;font-size:0.75rem;margin-right:0.3rem;">
+                          <i class="fas fa-check"></i> Approve
+                      </button>
+                      <button onclick="openRejectModal('${d.id}','residents')"
+                              style="background:#ef4444;border:none;padding:0.25rem 0.8rem;border-radius:20px;color:white;cursor:pointer;font-size:0.75rem;">
+                          <i class="fas fa-times"></i> Reject
+                      </button>
+                  </td>
+              </tr>`;
+          }).join('');
+      });
+}
+
+async function approveResidency(id) {
+    if (!confirm('Approve this residency request?')) return;
+    await db.collection('residents').doc(id).update({
+        status: 'approved',
+        approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast('Residency approved!', '#333');
+}
+
+// ── RESIDENTS ─────────────────────────────────────────────
+function loadResidents() {
+    db.collection('residents').where('status','==','approved').orderBy('approvedAt','desc')
+      .onSnapshot(snap => {
+          const tbody = document.getElementById('residentsBody');
+          if (snap.empty) {
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">No approved residents yet.</td></tr>`;
+              return;
+          }
+          tbody.innerHTML = snap.docs.map(d => {
+              const r = d.data();
+              return `<tr data-search="${(r.fullName+r.email+r.address).toLowerCase()}">
+                  <td style="font-weight:600;">${r.fullName || '—'}</td>
+                  <td>${r.email || '—'}</td>
+                  <td>${r.contactNumber || '—'}</td>
+                  <td>${r.gender || '—'}</td>
+                  <td>${r.civilStatus || '—'}</td>
+                  <td style="font-size:0.8rem;">${r.address || '—'}</td>
+                  <td>${formatDate(r.approvedAt || r.createdAt)}</td>
+              </tr>`;
+          }).join('');
+      });
+}
+
+// ── REQUESTS ─────────────────────────────────────────────
+function loadRequests() {
+    db.collection('requests').orderBy('createdAt','desc')
+      .onSnapshot(snap => {
+          allRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderRequests(allRequests);
+      });
+}
+
+function filterRequests() {
+    const search  = document.getElementById('reqSearch').value.toLowerCase();
+    const status  = document.getElementById('reqStatusFilter').value;
+    const type    = document.getElementById('reqTypeFilter').value;
+    renderRequests(allRequests.filter(r =>
+        (!search || r.fullName?.toLowerCase().includes(search) || r.refNo?.toLowerCase().includes(search)) &&
+        (!status || r.status === status) &&
+        (!type   || r.serviceType === type)
+    ));
+}
+
+function renderRequests(list) {
+    const tbody = document.getElementById('requestsBody');
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">No requests found.</td></tr>`;
+        return;
+    }
+    const cls = { pending:'status-pending', approved:'status-approved', rejected:'status-rejected' };
+    tbody.innerHTML = list.map(r => `
+        <tr>
+            <td style="font-size:0.7rem;font-weight:600;">${r.refNo || '—'}</td>
+            <td>${r.fullName || '—'}</td>
+            <td>${r.serviceType || '—'}</td>
+            <td><span class="status ${cls[r.status]||'status-pending'}">${capitalize(r.status)}</span></td>
+            <td>${formatDate(r.createdAt)}</td>
+            <td style="white-space:nowrap;">
+                ${r.status === 'pending' ? `
+                <button onclick="updateRequestStatus('${r.id}','approved')"
+                        style="background:#be185d;border:none;padding:0.2rem 0.7rem;border-radius:20px;color:white;cursor:pointer;font-size:0.7rem;margin-right:0.2rem;">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+                <button onclick="openRejectModal('${r.id}','requests')"
+                        style="background:#ef4444;border:none;padding:0.2rem 0.7rem;border-radius:20px;color:white;cursor:pointer;font-size:0.7rem;">
+                    <i class="fas fa-times"></i> Reject
+                </button>` : `<span style="color:#999;font-size:0.75rem;">${capitalize(r.status)}</span>`}
+            </td>
+        </tr>`).join('');
+}
+
+async function updateRequestStatus(id, status, reason = '') {
+    const data = { status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (reason) data.rejectionReason = reason;
+    await db.collection('requests').doc(id).update(data);
+    showToast('Request ' + status + '!', status === 'approved' ? '#333' : '#dc2626');
+}
+
+// ── BLOTTER ───────────────────────────────────────────────
+function loadBlotter() {
+    db.collection('blotter').orderBy('createdAt','desc')
+      .onSnapshot(snap => {
+          const tbody = document.getElementById('adminBltBody');
+          if (snap.empty) {
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">No blotter records.</td></tr>`;
+              return;
+          }
+          const statusColors = {
+              'open':{'bg':'#dbeafe','color':'#1d4ed8'}, 'under investigation':{'bg':'#fef9c3','color':'#a16207'},
+              'resolved':{'bg':'#f0f0f0','color':'#333'}, 'closed':{'bg':'#f3f4f6','color':'#374151'},
+          };
+          tbody.innerHTML = snap.docs.map(d => {
+              const b  = d.data();
+              const sc = statusColors[b.status] || statusColors['open'];
+              return `<tr data-search="${(b.caseNo+b.complainant+b.respondent).toLowerCase()}">
+                  <td style="font-size:0.7rem;font-weight:600;">${b.caseNo || '—'}</td>
+                  <td>${formatDate(b.createdAt)}</td>
+                  <td>${b.complainant || '—'}</td>
+                  <td>${b.respondent  || '—'}</td>
+                  <td style="font-size:0.75rem;">${b.incidentType || '—'}</td>
+                  <td><span style="background:${sc.bg};color:${sc.color};padding:0.2rem 0.6rem;border-radius:20px;font-size:0.65rem;font-weight:600;">${b.status}</span></td>
+                  <td>
+                      <select onchange="updateBlotterStatus('${d.id}',this.value)"
+                              style="padding:0.3rem 0.5rem;border:1px solid #fce7f3;border-radius:8px;font-size:0.72rem;">
+                          <option value="open"               ${b.status==='open'               ?'selected':''}>Open</option>
+                          <option value="under investigation" ${b.status==='under investigation'?'selected':''}>Under Investigation</option>
+                          <option value="resolved"           ${b.status==='resolved'           ?'selected':''}>Resolved</option>
+                          <option value="closed"             ${b.status==='closed'             ?'selected':''}>Closed</option>
+                      </select>
+                  </td>
+              </tr>`;
+          }).join('');
+      });
+}
+
+async function updateBlotterStatus(id, status) {
+    await db.collection('blotter').doc(id).update({ status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('Blotter status updated.', '#333');
+}
+
+// ── USERS ─────────────────────────────────────────────────
+function loadUsers() {
+    db.collection('users').orderBy('createdAt','desc')
+      .onSnapshot(snap => {
+          const tbody = document.getElementById('usersBody');
+          if (snap.empty) {
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">No users yet.</td></tr>`;
+              return;
+          }
+          tbody.innerHTML = snap.docs.map(d => {
+              const u = d.data();
+              return `<tr data-search="${(u.fullName+u.email+u.contactNumber).toLowerCase()}">
+                  <td style="font-weight:600;">${u.fullName || '—'}</td>
+                  <td>${u.email || '—'}</td>
+                  <td>${u.contactNumber || '—'}</td>
+                  <td>
+                      <select onchange="updateUserRole('${d.id}',this.value)"
+                              style="padding:0.3rem 0.5rem;border:1px solid #fce7f3;border-radius:8px;font-size:0.75rem;">
+                          <option value="resident" ${u.role==='resident'?'selected':''}>Resident</option>
+                          <option value="admin"    ${u.role==='admin'   ?'selected':''}>Admin</option>
+                      </select>
+                  </td>
+                  <td>${u.gender || '—'}</td>
+                  <td>${formatDate(u.createdAt)}</td>
+                  <td>
+                      <button onclick="deleteUser('${d.id}','${u.fullName || 'this user'}')"
+                              style="background:#ef4444;border:none;padding:0.2rem 0.7rem;border-radius:20px;color:white;cursor:pointer;font-size:0.7rem;">
+                          <i class="fas fa-trash"></i>
+                      </button>
+                  </td>
+              </tr>`;
+          }).join('');
+      });
+}
+
+async function updateUserRole(uid, role) {
+    await db.collection('users').doc(uid).update({ role });
+    showToast('User role updated to ' + role, '#333');
+}
+
+async function deleteUser(uid, name) {
+    if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
+    await db.collection('users').doc(uid).delete();
+    showToast('User deleted.', '#dc2626');
+}
+
+// ── REJECT MODAL ──────────────────────────────────────────
+function openRejectModal(id, collection) {
+    document.getElementById('rejectDocId').value      = id;
+    document.getElementById('rejectCollection').value = collection;
+    document.getElementById('rejectReason').value     = '';
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+
+async function confirmReject() {
+    const id         = document.getElementById('rejectDocId').value;
+    const collection = document.getElementById('rejectCollection').value;
+    const reason     = document.getElementById('rejectReason').value.trim();
+
+    if (!reason) { showToast('Please provide a rejection reason.', '#dc2626'); return; }
+
+    await db.collection(collection).doc(id).update({
+        status: 'rejected',
+        rejectionReason: reason,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast('Application rejected.', '#dc2626');
+    closeRejectModal();
+}
+
+// ── GENERIC SEARCH FILTER ─────────────────────────────────
+function filterTable(inputId, tbodyId) {
+    const query = document.getElementById(inputId).value.toLowerCase();
+    document.querySelectorAll(`#${tbodyId} tr[data-search]`).forEach(row => {
+        row.style.display = row.dataset.search.includes(query) ? '' : 'none';
+    });
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+</script>
+</body>
+</html>

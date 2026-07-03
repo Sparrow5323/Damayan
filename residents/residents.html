@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Damayang Lagi | Residents</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="app-container"><div class="view active-view" style="min-height:100vh;">
+<div class="dashboard-layout" style="min-height:100vh;">
+    <div class="sidebar" id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="top-bar" id="topbarMount"></div>
+        <div class="tab-pane active-tab">
+            <div class="info-card">
+                <h3><i class="fas fa-users"></i> Barangay Residency Registration</h3>
+
+                <!-- Status banner (shown after submission or if already registered) -->
+                <div id="statusBanner" style="display:none;"></div>
+
+                <!-- Registration Form -->
+                <div id="registrationSection">
+                    <p style="color:#666;margin-bottom:1.5rem;">
+                        Fill up this form to register as an official resident of Barangay Damayang Lagi.
+                    </p>
+
+                    <form id="residencyForm" style="background:#fff5f7;padding:1.5rem;border-radius:12px;">
+                        <h4 style="color:#333;margin-bottom:1rem;border-bottom:2px solid #fce7f3;padding-bottom:0.5rem;">
+                            <i class="fas fa-user"></i> Personal Information
+                        </h4>
+
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Full Name *</label>
+                            <input type="text" id="resFullName" required placeholder="Enter your full name"
+                                   style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div>
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Date of Birth *</label>
+                                <input type="date" id="resDob" required
+                                       style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Gender *</label>
+                                <select id="resGender" required style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    <option value="">Select</option><option>Male</option><option>Female</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Civil Status *</label>
+                                <select id="resCivilStatus" required style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                                    <option value="">Select</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Contact Number *</label>
+                                <input type="tel" id="resContact" placeholder="09XXXXXXXXX" required
+                                       style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Complete Address *</label>
+                            <input type="text" id="resAddress" placeholder="House number, street, barangay" required
+                                   style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                        </div>
+
+                        <h4 style="color:#333;margin:1rem 0;border-bottom:2px solid #fce7f3;padding-bottom:0.5rem;">
+                            <i class="fas fa-info-circle"></i> Additional Information
+                        </h4>
+
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Previous Residency Issues (if any)</label>
+                            <textarea id="resConsequences" rows="2"
+                                      placeholder="If any, please state here. Otherwise, leave blank."
+                                      style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;"></textarea>
+                        </div>
+
+                        <div style="margin-bottom:1.5rem;">
+                            <label style="display:block;font-size:0.7rem;font-weight:600;color:#333;margin-bottom:0.3rem;">Length of Residence (years) *</label>
+                            <input type="number" id="resLength" placeholder="How many years have you lived here?" min="0" required
+                                   style="width:100%;padding:0.7rem;border:1px solid #fce7f3;border-radius:8px;">
+                        </div>
+
+                        <button type="button" id="submitResBtn" onclick="submitResidency()"
+                                class="submit-clearance-btn" style="background:#be185d;width:auto;padding:0.7rem 1.5rem;">
+                            <i class="fas fa-check-circle"></i> Request Residency
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../assets/js/firebase-config.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/topbar.js"></script>
+
+<script>
+requireAuth(async user => {
+    loadSidebar('residents');
+    loadTopbar();
+
+    // Check if user already has a residency application
+    const existing = await db.collection('residents')
+        .where('uid', '==', user.uid)
+        .limit(1)
+        .get();
+
+    if (!existing.empty) {
+        const data = existing.docs[0].data();
+        showStatusBanner(data);
+    } else {
+        // Pre-fill from user profile
+        const snap = await db.collection('users').doc(user.uid).get();
+        if (snap.exists) {
+            const p = snap.data();
+            document.getElementById('resFullName').value = p.fullName || '';
+            document.getElementById('resDob').value      = p.dob      || '';
+            document.getElementById('resContact').value  = p.contactNumber || '';
+            document.getElementById('resAddress').value  = p.address  || '';
+            if (p.gender)      document.getElementById('resGender').value      = p.gender;
+            if (p.civilStatus) document.getElementById('resCivilStatus').value = p.civilStatus;
+        }
+    }
+});
+
+function showStatusBanner(data) {
+    document.getElementById('registrationSection').style.display = 'none';
+    const colors = { pending:'#fff3e0', approved:'#f0f0f0', rejected:'#fee2e2' };
+    const icons  = { pending:'fa-clock', approved:'fa-check-circle', rejected:'fa-times-circle' };
+    const texts  = { pending:'Your residency application is pending approval.', approved:'Your residency has been approved!', rejected:'Your residency application was rejected.' };
+    const banner = document.getElementById('statusBanner');
+    banner.style.cssText = `display:block;background:${colors[data.status]||'#fff5f7'};padding:1.5rem;border-radius:12px;margin-bottom:1.5rem;border:1px solid #fce7f3;`;
+    banner.innerHTML = `
+        <div style="text-align:center;">
+            <i class="fas ${icons[data.status]||'fa-info-circle'}" style="font-size:3rem;color:${data.status==='approved'?'#be185d':data.status==='rejected'?'#dc2626':'#f59e0b'};margin-bottom:1rem;"></i>
+            <h3 style="color:#333;">${texts[data.status]||''}</h3>
+            <p style="color:#666;margin-top:0.5rem;">Submitted: ${formatDate(data.createdAt)}</p>
+            ${data.status==='rejected' && data.rejectionReason ? `<p style="color:#dc2626;margin-top:0.5rem;">Reason: ${data.rejectionReason}</p>` : ''}
+            ${data.status==='rejected' ? `<button onclick="reapply()" class="action-btn" style="margin-top:1rem;background:#be185d;">Re-apply</button>` : ''}
+        </div>`;
+}
+
+function reapply() {
+    document.getElementById('statusBanner').style.display    = 'none';
+    document.getElementById('registrationSection').style.display = 'block';
+}
+
+async function submitResidency() {
+    const fullName     = document.getElementById('resFullName').value.trim();
+    const dob          = document.getElementById('resDob').value;
+    const gender       = document.getElementById('resGender').value;
+    const civilStatus  = document.getElementById('resCivilStatus').value;
+    const contact      = document.getElementById('resContact').value.trim();
+    const address      = document.getElementById('resAddress').value.trim();
+    const consequences = document.getElementById('resConsequences').value.trim();
+    const length       = document.getElementById('resLength').value;
+
+    if (!fullName || !dob || !gender || !civilStatus || !contact || !address || !length) {
+        showToast('Please fill in all required fields.', '#dc2626'); return;
+    }
+
+    const btn = document.getElementById('submitResBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const user = auth.currentUser;
+        await db.collection('residents').add({
+            uid: user.uid,
+            email: user.email,
+            fullName, dob, gender, civilStatus,
+            contactNumber: contact,
+            address, consequences,
+            lengthOfResidence: parseInt(length),
+            status:    'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        showToast('Residency application submitted!', '#333');
+        const snap = await db.collection('residents').where('uid','==',user.uid).limit(1).get();
+        if (!snap.empty) showStatusBanner(snap.docs[0].data());
+    } catch (e) {
+        showToast('Error: ' + e.message, '#dc2626');
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Request Residency';
+    }
+}
+</script>
+</body>
+</html>
